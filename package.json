@@ -1,5 +1,5 @@
 {
-  "name": "shareDraw",
+  "name": "share-draw",
   "private": true,
   "scripts": {
     "build": "turbo run build",

@@ -1,0 +1,38 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  username String @unique
+  firstName String
+  lastName String
+  password String
+  rooms Room[]
+  canvasdrawings CanvasDrawing[]
+}
+
+model Room {
+  id Int @id @default(autoincrement())
+  slug String @unique
+  adminId String
+  createdAt DateTime @default(now())
+  admin User @relation(fields: [adminId], references: [username])
+  canvasdrawings CanvasDrawing[]
+}
+
+model CanvasDrawing {
+  id Int @id @default(autoincrement())
+  roomName String
+  message String
+  username String
+  room Room @relation(fields: [roomName], references: [slug])
+  user User @relation(fields: [username], references: [username])
+}
+
