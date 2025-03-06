@@ -57,57 +57,59 @@ wss.on('connection', function connection(ws, req) {
 
 
     ws.on('message', async function message(data){
-        let parsedData;     // {type : "" , roomName : ""}
-        if(typeof data !== "string"){
-            parsedData = JSON.parse(data.toString());
-        }else{
-            parsedData = JSON.parse(data);
-        }
 
-        console.log(parsedData);
-        
-        if(parsedData.type === "subscribe") {
-            const user = users.find(x => x.ws === ws)
-            user?.rooms.push(parsedData.roomName);
-            console.log(users)
-        }
-
-        if(parsedData.type === "unsubscribe") {
-            const user = users.find(x => x.ws === ws)
-            if(!user)
-                return;
-            user.rooms= user?.rooms.filter(x => x === parsedData.roomName);    // {type : "" , roomName : ""}
-            console.log(users)
-        }
-
-        console.log("message recieved.");
-        console.log(parsedData);
-
-
-        if(parsedData.type === "draw") {    // {type : " ", roomName : " ", message : " "}
-            const roomName = parsedData.roomName;
-            const message =  parsedData.message;
+        try {
             
-            await prismaClient.canvasDrawing.create({
-                data: {
-                    roomName,
-                    message,
-                    username
-                }
-            })
+            let parsedData;     // {type : "" , roomName : ""}
+            if(typeof data !== "string"){
+                parsedData = JSON.parse(data.toString());
+            }else{
+                parsedData = JSON.parse(data);
+            }
+    
+            
+            if(parsedData.type === "subscribe") {
+                const user = users.find(x => x.ws === ws)
+                user?.rooms.push(parsedData.roomName);
+            }
+    
+            if(parsedData.type === "unsubscribe") {
+                const user = users.find(x => x.ws === ws)
+                if(!user)
+                    return;
+                user.rooms= user?.rooms.filter(x => x === parsedData.roomName);    // {type : "" , roomName : ""}
+            }
+    
+    
+            if(parsedData.type === "draw") {    // {type : " ", roomName : " ", message : " "}
+                const roomName = parsedData.roomName;
+                const message =  parsedData.message;
+                
+                await prismaClient.canvasDrawing.create({
+                    data: {
+                        roomName,
+                        message,
+                        username
+                    }
+                })
+    
+                users.forEach(user => {
+                    if(user.rooms.includes(roomName)) {
+                        user.ws.send(JSON.stringify({
+                            type : parsedData.type,
+                            message : parsedData.message,
+                            roomName : parsedData.roomName,
+                            sentBy : username
+                        }))
+                    }
+                })
+            }
+    
 
-            users.forEach(user => {
-                if(user.rooms.includes(roomName)) {
-                    user.ws.send(JSON.stringify({
-                        type : parsedData.type,
-                        message : parsedData.message,
-                        roomName : parsedData.roomName,
-                        sentBy : username
-                    }))
-                }
-            })
+
+        } catch (error) {
+            ws.send("Internal server error.")            
         }
-
     })
 
 })
