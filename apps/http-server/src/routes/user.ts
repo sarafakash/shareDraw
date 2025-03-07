@@ -57,7 +57,7 @@ UserRouter.post('/signup', async (req : Request , res : Response ) => {
 
 })
 
-UserRouter.post('/signin', async (req : Request, res : Response)=> {
+UserRouter.post('/login', async (req : Request, res : Response)=> {
     const incomingData = SigninUserZodSchema.safeParse(req.body);
     if(!(incomingData.success)) {
         res.status(403).json({
