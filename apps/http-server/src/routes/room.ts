@@ -39,11 +39,11 @@ RoomRouter.post('/', auth, async(req : AuthenticatedRequest, res : Response) => 
 
 
 
-RoomRouter.get('/:slug', auth , async(req : AuthenticatedRequest, res: Response) => {      // finding the room details
+RoomRouter.get('/:slug', async(req : Request, res: Response) => {      // finding the room details
 
         const slug = req.params.slug;
-        const username = req.username;
-        if(!slug || !username) {
+        console.log(slug)
+        if(!slug ) {
             res.status(403).json({
                 message : "Invalid room"
             })
@@ -73,24 +73,23 @@ RoomRouter.get('/:slug', auth , async(req : AuthenticatedRequest, res: Response)
 
 })
 
-RoomRouter.get('/canvas/:roomName', auth , async(req : AuthenticatedRequest, res: Response) => { // finding all the chats or messages inside the room
+RoomRouter.get('/canvas/:roomName', async(req : Request, res: Response) => { // finding all the chats or messages inside the room
 
     const roomName = req.params.roomName;
-    const username = req.username;
-    if(!roomName || !username) {
+    if(!roomName) {
         res.status(403).json({
             message : "Invalid room"
         })
         return;
     }
     try {
-        const chats = await prismaClient.canvasDrawing.findMany({
+        const shapes = await prismaClient.canvasDrawing.findMany({
             where : {
                 roomName
             }
         })
         res.status(200).json({
-            chats
+            shapes
         })
         return;
     } catch (error) {

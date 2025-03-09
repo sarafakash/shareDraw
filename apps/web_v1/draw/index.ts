@@ -1,4 +1,6 @@
-import { clear } from "console";
+import axios from "axios";
+import dotenv from "dotenv";
+dotenv.config();
 
 type Shape = {
     type : "rect";
@@ -13,12 +15,25 @@ type Shape = {
     radius : number;
 }
 
-export function initDraw(canvas : HTMLCanvasElement, ctx : CanvasRenderingContext2D , dimensions : { width: number; height: number}) {
+export async function initDraw(canvas : HTMLCanvasElement, ctx : CanvasRenderingContext2D , dimensions : { width: number; height: number}, roomName : string ,socket : WebSocket) {
 
-    let existingShape : Shape[] = []
-    ctx.fillStyle = "rgba(16,24,40,255)";
-    ctx.fillRect(0, 0, dimensions.width, dimensions.height);
-    ctx.strokeStyle = "white";
+    let existingShape : Shape[] = await getExistingShapes(roomName);
+    console.log(existingShape)
+    // ctx.fillStyle = "rgba(16,24,40,255)";
+    // ctx.fillRect(0, 0, dimensions.width, dimensions.height);
+    // ctx.strokeStyle = "white";
+
+    socket.onmessage = (event) => {
+        console.log(event.data)
+        const message = JSON.parse(event.data)
+        if(message.type === "draw") {
+            const parsedShape = JSON.parse(message.message);
+            existingShape.push(parsedShape);
+            clearCanvas(canvas, ctx, existingShape);
+        }
+    }
+
+    clearCanvas(canvas, ctx, existingShape);
 
     let clicked = false;
     let startX = 0;
@@ -35,13 +50,20 @@ export function initDraw(canvas : HTMLCanvasElement, ctx : CanvasRenderingContex
         clicked = false;
         const width = e.clientX - startX;
         const height = e.clientY - startY;
-        existingShape.push({
+        const shape : Shape = {
             type : "rect",
             x : startX,
             y : startY,
             height,
             width
-        })
+        }
+        existingShape.push(shape)
+        if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ type: "draw", message: JSON.stringify({ shape }), roomName }));
+        }else{
+            console.log("erorr in ws")
+        }
+        
     };
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -68,6 +90,7 @@ export function initDraw(canvas : HTMLCanvasElement, ctx : CanvasRenderingContex
 
 function clearCanvas (canvas : HTMLCanvasElement, ctx : CanvasRenderingContext2D, existingShape : Shape[]) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = "white";
     ctx.fillStyle = "rgba(16,24,40,255)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     existingShape.map((shape) => {
@@ -75,4 +98,16 @@ function clearCanvas (canvas : HTMLCanvasElement, ctx : CanvasRenderingContext2D
             ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
         }
     })
+}
+
+async function getExistingShapes(roomName : string) {
+    const URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+    const res = await axios.get(`${URL}/room/canvas/${roomName}`)
+    const shapes = res.data.shapes;
+    const exisitngshapesData = shapes.map((x : {message : string}) => {
+        const extractedShapeData = JSON.parse(x.message);
+        return extractedShapeData.shape;
+    });
+    return exisitngshapesData;
+ 
 }

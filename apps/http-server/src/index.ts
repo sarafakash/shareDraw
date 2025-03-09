@@ -4,7 +4,13 @@ import RoomRouter from "./routes/room";
 import cors from "cors";
 
 const app = express();
-app.use(express.json());
+app.use((req, res, next) => {
+    if (req.method !== "GET") {
+        express.json()(req, res, next);
+    } else {
+        next();
+    }
+});
 app.use(cors());
 
 app.use('/user', UserRouter)
