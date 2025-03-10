@@ -90,8 +90,16 @@ wss.on('connection', function connection(ws, req) {
             if (parsedData.type === "draw") {
                 const roomName = parsedData.roomName;
                 const message = parsedData.message;
-
+                const existingRoom = await prismaClient.room.findUnique({
+                    where: { slug: roomName }
+                });
+                
+                if (!existingRoom) {
+                    console.error("Room does not exist:", roomName);
+                    return; // Handle the error gracefully
+                }
                 // Save drawing to DB
+                console.log(roomName, message , username)
                 await prismaClient.canvasDrawing.create({
                     data: {
                         roomName,

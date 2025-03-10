@@ -15,14 +15,17 @@ RoomRouter.post('/', auth, async(req : AuthenticatedRequest, res : Response) => 
     }
 
     const username = req.username;
+    console.log(incomingData.data.roomName)
 
     try {
-            await prismaClient.room.create({
+            const resp = await prismaClient.room.create({
             data : {
                 slug : incomingData.data.roomName,
                 adminId : username,              
             }
         })
+
+        console.log(resp)
 
         res.status(200).json({
             message : "Room created.",
@@ -30,6 +33,7 @@ RoomRouter.post('/', auth, async(req : AuthenticatedRequest, res : Response) => 
         })
         return;
     } catch (error) {
+        console.log(error)
         res.status(500).json({
             message : "Internal server error while creating room."
         })
