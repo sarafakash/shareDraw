@@ -1,35 +1,37 @@
-import { initDraw } from "@/draw";
 import { useEffect, useRef, useState } from "react";
+import { Draw } from "../draw/draw"
 
 export function Canvas ({roomName ,socket}:{roomName : string, socket : WebSocket}) {
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [dimensions, setDimensions] = useState({width: 0, height : 0})
 
-    useEffect(() => {
-
-        const handleResize = () => {
-            setDimensions({ width: window.innerWidth, height: window.innerHeight });
-        };
-        window.addEventListener("resize", handleResize);
-        handleResize();
-        return () => {
-            window.removeEventListener("resize", handleResize);
-        };
-    }, []);
+    const drawRef = useRef<Draw | null>(null);
 
     useEffect(() => {
         if (!canvasRef.current ) return;
-        
         const canvas = canvasRef.current;
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
+        if(canvas) {
+            drawRef.current = new Draw(canvas, roomName, socket, ctx);
 
-        initDraw(canvas, ctx, dimensions, roomName, socket)
-    }, [dimensions]);
+
+            return ()=> {
+                drawRef.current?.destroy();
+            }
+        }
+
+    }, [roomName, socket]);
+
+
 
     return(
-        <canvas ref={canvasRef}  width={dimensions.width} height={dimensions.height} />
+        <div style={{
+            height: "100vh",
+            overflow: "hidden"
+        }}>
+            <canvas ref={canvasRef} width={window.innerWidth} height={window.innerHeight}></canvas>
+        </div>
     );
 
 }

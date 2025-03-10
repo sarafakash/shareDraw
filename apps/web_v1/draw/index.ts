@@ -1,4 +1,5 @@
 import axios from "axios";
+import { Draw } from "./draw";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -24,11 +25,13 @@ export async function initDraw(canvas : HTMLCanvasElement, ctx : CanvasRendering
     // ctx.strokeStyle = "white";
 
     socket.onmessage = (event) => {
-        console.log(event.data)
         const message = JSON.parse(event.data)
         if(message.type === "draw") {
+            console.log("debug1")
+            console.log(message)
             const parsedShape = JSON.parse(message.message);
-            existingShape.push(parsedShape);
+            console.log(parsedShape)
+            existingShape.push(parsedShape.shape);
             clearCanvas(canvas, ctx, existingShape);
         }
     }
@@ -111,3 +114,5 @@ async function getExistingShapes(roomName : string) {
     return exisitngshapesData;
  
 }
+
+

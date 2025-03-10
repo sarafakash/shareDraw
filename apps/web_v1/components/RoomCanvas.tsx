@@ -12,7 +12,7 @@ export function RoomCanvas({ roomName }: { roomName: string }) {
         console.log("Internal server error while fetching the wsurl");
         return <div>Failed to fetch WebSocket URL.</div>;
     }
-    const token = 
+
     useEffect(() => {
         const ws = new WebSocket(`${ws_url}?token=Bearer eyJhbGciOiJIUzI1NiJ9.YWthc2gx.m8ev70nbyJNanotPV6EbzqicT3JEOepFF3B7DsB82Fo`);
 
@@ -32,16 +32,15 @@ export function RoomCanvas({ roomName }: { roomName: string }) {
             console.error("WebSocket error:", error);
         };
 
-        // Cleanup function, only close the WebSocket when the component unmounts
         return () => {
             if (ws.readyState === WebSocket.OPEN) {
-                ws.close(); // Only close if open
+                ws.close(); 
             }
         };
     }, [roomName, ws_url]);
 
     if (!socket) {
-        return <div>Connecting to the server...</div>;
+        return <div className="text-white text-5xl w-screen h-screen bg-black flex justify-center items-center ">Connecting to the server...</div>;
     }
 
     return <Canvas roomName={roomName} socket={socket} />;
